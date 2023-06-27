@@ -359,7 +359,8 @@ void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
   IRtimer usecs = IRtimer();
 
   // We always send a message, even for repeat=0, hence '<= repeat'.
-  for (uint16_t r = 0; r <= repeat; r++) {
+  for (uint16_t r = 0; r <= repeat
+       || (repeat > 0 && _repeatCB && _repeatCB()); r++) {
     usecs.reset();
 
     // Header
@@ -416,7 +417,8 @@ void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
   // Setup
   enableIROut(frequency, dutycycle);
   // We always send a message, even for repeat=0, hence '<= repeat'.
-  for (uint16_t r = 0; r <= repeat; r++) {
+  for (uint16_t r = 0; r <= repeat
+       || (repeat > 0 && _repeatCB && _repeatCB()); r++) {
     // Header
     if (headermark) mark(headermark);
     if (headerspace) space(headerspace);

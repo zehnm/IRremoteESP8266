@@ -97,7 +97,8 @@ bool IRsend::sendPronto(uint16_t data[], uint16_t len, uint16_t repeat) {
     if (seq_2_len + seq_2_start > len) return false;
 
     // Send the contents of the 2nd sequence.
-    for (uint16_t r = 0; r < repeat; r++)
+    for (uint16_t r = 0; r < repeat
+         || (repeat > 1 && _repeatCB && _repeatCB()); r++)
       for (uint16_t i = seq_2_start; i < seq_2_start + seq_2_len; i += 2) {
         mark((data[i] * periodic_time_x10) / 10);
         space((data[i + 1] * periodic_time_x10) / 10);

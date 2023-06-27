@@ -65,7 +65,8 @@ using irutils::minsToString;
 void IRsend::sendSharpRaw(const uint64_t data, const uint16_t nbits,
                           const uint16_t repeat) {
   uint64_t tempdata = data;
-  for (uint16_t i = 0; i <= repeat; i++) {
+  for (uint16_t i = 0; i <= repeat
+       || (repeat > 0 && _repeatCB && _repeatCB()); i++) {
     // Protocol demands that the data be sent twice; once normally,
     // then with all but the address bits inverted.
     // Note: Previously this used to be performed 3 times (normal, inverted,

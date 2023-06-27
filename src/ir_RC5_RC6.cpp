@@ -73,7 +73,8 @@ void IRsend::sendRC5(const uint64_t data, uint16_t nbits,
   }
 
   IRtimer usecTimer = IRtimer();
-  for (uint16_t i = 0; i <= repeat; i++) {
+  for (uint16_t i = 0; i <= repeat
+       || (repeat > 0 && _repeatCB && _repeatCB()); i++) {
     usecTimer.reset();
 
     // Header
@@ -193,7 +194,8 @@ void IRsend::sendRC6(const uint64_t data, const uint16_t nbits,
   if (nbits > sizeof(data) * 8) return;
   // Set 36kHz IR carrier frequency & a 1/3 (33%) duty cycle.
   enableIROut(36, 33);
-  for (uint16_t r = 0; r <= repeat; r++) {
+  for (uint16_t r = 0; r <= repeat
+       || (repeat > 0 && _repeatCB && _repeatCB()); r++) {
     // Header
     mark(kRc6HdrMark);
     space(kRc6HdrSpace);
