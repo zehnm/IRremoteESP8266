@@ -549,7 +549,7 @@ class IRsend {
                    const uint16_t repeat = kNoRepeat);
 #endif  // SEND_GORENJE
 #if SEND_PRONTO
-  void sendPronto(uint16_t data[], uint16_t len, uint16_t repeat = kNoRepeat);
+  bool sendPronto(uint16_t data[], uint16_t len, uint16_t repeat = kNoRepeat);
 #endif
 #if SEND_ARGO
   void sendArgo(const unsigned char data[],

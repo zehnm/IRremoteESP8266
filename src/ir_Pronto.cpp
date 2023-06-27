@@ -53,12 +53,12 @@ const uint16_t kProntoDataOffset = 4;
 /// @endcode
 /// @see http://www.etcwiki.org/wiki/Pronto_Infrared_Format
 /// @see http://www.remotecentral.com/features/irdisp2.htm
-void IRsend::sendPronto(uint16_t data[], uint16_t len, uint16_t repeat) {
+bool IRsend::sendPronto(uint16_t data[], uint16_t len, uint16_t repeat) {
   // Check we have enough data to work out what to send.
-  if (len < kProntoMinLength) return;
+  if (len < kProntoMinLength) return false;
 
   // We only know how to deal with 'raw' pronto codes types. Reject all others.
-  if (data[kProntoTypeOffset] != 0) return;
+  if (data[kProntoTypeOffset] != 0) return false;
 
   // Pronto frequency is in Hz.
   uint16_t hz =
@@ -78,7 +78,7 @@ void IRsend::sendPronto(uint16_t data[], uint16_t len, uint16_t repeat) {
   // Is there a first (normal) sequence to send?
   if (seq_1_len > 0) {
     // Check we have enough data to send the complete first sequence.
-    if (seq_1_len + seq_1_start > len) return;
+    if (seq_1_len + seq_1_start > len) return false;
     // Send the contents of the 1st sequence.
     for (uint16_t i = seq_1_start; i < seq_1_start + seq_1_len; i += 2) {
       mark((data[i] * periodic_time_x10) / 10);
@@ -94,7 +94,7 @@ void IRsend::sendPronto(uint16_t data[], uint16_t len, uint16_t repeat) {
   // Is there a second (repeat) sequence to be sent?
   if (seq_2_len > 0) {
     // Check we have enough data to send the complete second sequence.
-    if (seq_2_len + seq_2_start > len) return;
+    if (seq_2_len + seq_2_start > len) return false;
 
     // Send the contents of the 2nd sequence.
     for (uint16_t r = 0; r < repeat; r++)
@@ -103,5 +103,6 @@ void IRsend::sendPronto(uint16_t data[], uint16_t len, uint16_t repeat) {
         space((data[i + 1] * periodic_time_x10) / 10);
       }
   }
+  return true;
 }
 #endif  // SEND_PRONTO
