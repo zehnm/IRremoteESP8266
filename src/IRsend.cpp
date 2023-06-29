@@ -50,12 +50,10 @@ IRsend::IRsend(uint16_t IRsendPin, bool inverted, bool use_modulation)
 /// @param[in] use_modulation Do we do frequency modulation during transmission?
 ///  i.e. If not, assume a 100% duty cycle. Ignore attempts to change the
 ///  duty cycle etc.
-/// @param[in] irPinIsMask GPIO output pin mask to use when sending an IR
+/// @param[in] ir_pin_mask GPIO output pin mask to use when sending an IR
 ///  command.
-IRsend::IRsend(bool use_modulation, uint32_t irPinIsMask) : IRpin(irPinIsMask),
-    _irPinIsMask(true) {
-  outputOn = HIGH;
-  outputOff = LOW;
+IRsend::IRsend(bool use_modulation, uint32_t ir_pin_mask) : IRpin(ir_pin_mask),
+    periodOffset(kPeriodOffset), _irPinIsMask(true) {
   modulation = use_modulation;
   if (modulation)
     _dutycycle = kDutyDefault;
@@ -70,6 +68,9 @@ IRsend::IRsend(bool use_modulation, uint32_t irPinIsMask) : IRpin(irPinIsMask),
 uint32_t IRsend::setPinMask(uint32_t ir_pin_mask) {
   if (!_irPinIsMask) {
     return 0;
+  }
+  if (IRpin == ir_pin_mask) {
+    return ir_pin_mask;
   }
   // Make sure the old outputs are turned off
   ledOff();

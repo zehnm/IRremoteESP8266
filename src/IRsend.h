@@ -244,7 +244,7 @@ class IRsend {
                   bool use_modulation = true);
 #if defined(ESP32)
   explicit IRsend(bool use_modulation, uint32_t ir_pin_mask);
-  uint32_t setPinMask(uint32_t irPinIsMask);
+  uint32_t setPinMask(uint32_t ir_pin_mask);
 #endif
   void begin();
   void enableIROut(uint32_t freq, uint8_t duty = kDutyDefault);
