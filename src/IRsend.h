@@ -242,6 +242,10 @@ class IRsend {
  public:
   explicit IRsend(uint16_t IRsendPin, bool inverted = false,
                   bool use_modulation = true);
+#if defined(ESP32)
+  explicit IRsend(bool use_modulation, uint32_t ir_pin_mask);
+  uint32_t setPinMask(uint32_t irPinIsMask);
+#endif
   void begin();
   void enableIROut(uint32_t freq, uint8_t duty = kDutyDefault);
   VIRTUAL void _delayMicroseconds(uint32_t usec);
@@ -923,7 +927,7 @@ class IRsend {
 #endif  // UNIT_TEST
   uint16_t onTimePeriod;
   uint16_t offTimePeriod;
-  uint16_t IRpin;
+  uint32_t IRpin;
   int8_t periodOffset;
   uint8_t _dutycycle;
   bool modulation;
@@ -934,6 +938,10 @@ class IRsend {
 #endif  // SEND_SONY
 
   RepeatCallbackFunction _repeatCB = nullptr;
+#if defined(ESP32)
+  // Use a pinmask for IR output instead a single pin.
+  bool _irPinIsMask;
+#endif
 };
 
 #endif  // IRSEND_H_

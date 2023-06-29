@@ -41,10 +41,52 @@ IRsend::IRsend(uint16_t IRsendPin, bool inverted, bool use_modulation)
     _dutycycle = kDutyMax;
 }
 
+#if defined(ESP32)
+/// Constructor for an IRsend object using a GPIO output mask instead of an
+/// output pin on an ESP32.
+///
+/// This allows sending IR codes in parallel on multiple GPIO outputs.
+/// Attention: the caller is responsible to configure the GPIO pins as outputs!
+/// @param[in] use_modulation Do we do frequency modulation during transmission?
+///  i.e. If not, assume a 100% duty cycle. Ignore attempts to change the
+///  duty cycle etc.
+/// @param[in] irPinIsMask GPIO output pin mask to use when sending an IR
+///  command.
+IRsend::IRsend(bool use_modulation, uint32_t irPinIsMask) : IRpin(irPinIsMask),
+    _irPinIsMask(true) {
+  outputOn = HIGH;
+  outputOff = LOW;
+  modulation = use_modulation;
+  if (modulation)
+    _dutycycle = kDutyDefault;
+  else
+    _dutycycle = kDutyMax;
+}
+
+/// Set a new GPIO output pin mask.
+/// This call has no effect if a normal single GPIO output pin is used.
+/// @param ir_pin_mask the new GPIO output pin mask
+/// @return the old GPIO output pin mask
+uint32_t IRsend::setPinMask(uint32_t ir_pin_mask) {
+  if (!_irPinIsMask) {
+    return 0;
+  }
+  // Make sure the old outputs are turned off
+  ledOff();
+
+  uint32_t old = IRpin;
+  IRpin = ir_pin_mask;
+  return old;
+}
+#endif
+
 /// Enable the pin for output.
 void IRsend::begin() {
 #ifndef UNIT_TEST
-  pinMode(IRpin, OUTPUT);
+#if defined(ESP32)
+  if (!_irPinIsMask)
+#endif
+    pinMode(static_cast<uint8_t>(IRpin), OUTPUT);
 #endif
   ledOff();  // Ensure the LED is in a known safe state when we start.
 }
@@ -52,14 +94,24 @@ void IRsend::begin() {
 /// Turn off the IR LED.
 void IRsend::ledOff() {
 #ifndef UNIT_TEST
-  digitalWrite(IRpin, outputOff);
+#if defined(ESP32)
+  if (_irPinIsMask)
+    GPIO.out_w1tc = IRpin;
+  else
+#endif
+    digitalWrite(static_cast<uint8_t>(IRpin), outputOff);
 #endif
 }
 
 /// Turn on the IR LED.
 void IRsend::ledOn() {
 #ifndef UNIT_TEST
-  digitalWrite(IRpin, outputOn);
+#if defined(ESP32)
+  if (_irPinIsMask)
+    GPIO.out_w1ts = IRpin;
+  else
+#endif
+    digitalWrite(static_cast<uint8_t>(IRpin), outputOn);
 #endif
 }
 
