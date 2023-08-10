@@ -6,6 +6,7 @@
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
+#include <functional>
 #include "IRremoteESP8266.h"
 
 // Originally from https://github.com/shirriff/Arduino-IRremote/
@@ -42,6 +43,9 @@ const uint32_t kDefaultMessageGap = 100000;
 /// Placeholder for missing sensor temp value
 /// @note Not using "-1" as it may be a valid external temp
 const float kNoTempValue = -100.0;
+
+// Callback function for adjusting IR repeats wile sending an IR code
+typedef std::function<bool()> RepeatCallbackFunction;
 
 /// Enumerators and Structures for the Common A/C API.
 namespace stdAc {
@@ -238,6 +242,10 @@ class IRsend {
  public:
   explicit IRsend(uint16_t IRsendPin, bool inverted = false,
                   bool use_modulation = true);
+#if defined(ESP32)
+  explicit IRsend(bool use_modulation, uint32_t ir_pin_mask);
+  uint32_t setPinMask(uint32_t ir_pin_mask);
+#endif
   void begin();
   void enableIROut(uint32_t freq, uint8_t duty = kDutyDefault);
   VIRTUAL void _delayMicroseconds(uint32_t usec);
@@ -885,6 +893,19 @@ class IRsend {
                     const uint16_t repeat = kNoRepeat);
 #endif  // SEND_YORK
 
+  /// Set an optional IR repeat callback function to dynamically prolong
+  /// the repeat sequence of an actively transmitted IR signal.
+  ///
+  /// The initial repeat is taken from the send function. The callback is
+  /// called during the repeat sequence to check if the sequence needs to
+  /// be extended. Note: the initial repeat value cannot be shortened, only
+  /// prolonged!
+  /// @param[in] repeatCB callback function to signal if IR repeat is still
+  ///  active. Set `nullptr` to disable the callback.
+  void setRepeatCallback(RepeatCallbackFunction repeatCB) {
+    _repeatCB = repeatCB;
+  }
+
  protected:
 #ifdef UNIT_TEST
 #ifndef HIGH
@@ -906,7 +927,7 @@ class IRsend {
 #endif  // UNIT_TEST
   uint16_t onTimePeriod;
   uint16_t offTimePeriod;
-  uint16_t IRpin;
+  uint32_t IRpin;
   int8_t periodOffset;
   uint8_t _dutycycle;
   bool modulation;
@@ -915,6 +936,12 @@ class IRsend {
   void _sendSony(const uint64_t data, const uint16_t nbits,
                  const uint16_t repeat, const uint16_t freq);
 #endif  // SEND_SONY
+
+  RepeatCallbackFunction _repeatCB = nullptr;
+#if defined(ESP32)
+  // Use a pinmask for IR output instead a single pin.
+  bool _irPinIsMask;
+#endif
 };
 
 #endif  // IRSEND_H_

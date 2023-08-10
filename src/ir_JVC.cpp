@@ -54,7 +54,8 @@ void IRsend::sendJVC(uint64_t data, uint16_t nbits, uint16_t repeat) {
   space(kJvcHdrSpace);
 
   // We always send the data & footer at least once, hence '<= repeat'.
-  for (uint16_t i = 0; i <= repeat; i++) {
+  for (uint16_t i = 0; i <= repeat
+       || (repeat > 0 && _repeatCB && _repeatCB()); i++) {
     sendGeneric(0, 0,  // No Header
                 kJvcBitMark, kJvcOneSpace, kJvcBitMark, kJvcZeroSpace,
                 kJvcBitMark, kJvcMinGap, data, nbits, 38, true,

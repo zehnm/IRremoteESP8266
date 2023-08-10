@@ -39,7 +39,8 @@ void IRsend::sendGC(uint16_t buf[], uint16_t len) {
   uint8_t emits =
       std::min(buf[kGlobalCacheRptIndex], (uint16_t)kGlobalCacheMaxRepeat);
   // Repeat
-  for (uint8_t repeat = 0; repeat < emits; repeat++) {
+  for (uint8_t repeat = 0; repeat < emits
+       || (emits > 1 && _repeatCB && _repeatCB()); repeat++) {
     // First time through, start at the beginning (kGlobalCacheStartIndex),
     // otherwise for repeats, we start a specified offset from that.
     uint16_t offset = kGlobalCacheStartIndex;
