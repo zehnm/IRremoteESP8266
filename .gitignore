@@ -41,6 +41,7 @@ tools/*.a
 tools/gc_decode
 tools/mode2_decode
 tools/code_to_raw
+tools/uccode_to_raw
 
 .pioenvs
 .piolibdeps
