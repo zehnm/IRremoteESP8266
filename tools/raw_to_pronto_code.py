@@ -7,7 +7,7 @@ import sys
 from auto_analyse_raw_data import convert_rawdata, add_rawdata_args, get_rawdata
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 def parse_and_report(rawdata_str, hertz=38000, end_usecs=100000,
                      use_initial=False, generate_code=False, verbose=False,
                      output=sys.stdout):

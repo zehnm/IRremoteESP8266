@@ -47,7 +47,9 @@
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
+#ifndef UNIT_TEST
 #include "hal/framework.h"
+#endif
 #include "IRrecv.h"
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
