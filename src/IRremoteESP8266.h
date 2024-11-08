@@ -1505,6 +1505,9 @@ const uint16_t kYorkStateLength = 17;
 #define DPRINT(x) do { Serial.print(x); } while (0)
 #define DPRINTLN(x) do { Serial.println(x); } while (0)
 #endif  // ARDUINO
+#elif defined(ESP32)
+#define DPRINT(x) do { std::cout << x; } while (0)
+#define DPRINTLN(x) do { std::cout << x << std::endl; } while (0)
 #else  // DEBUG
 #define DPRINT(x)
 #define DPRINTLN(x)

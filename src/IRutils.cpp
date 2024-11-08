@@ -2,7 +2,7 @@
 
 #include "IRutils.h"
 #ifndef UNIT_TEST
-#include <Arduino.h>
+#include "hal/framework.h"
 #endif
 
 #define __STDC_LIMIT_MACROS
@@ -814,8 +814,11 @@ namespace irutils {
 #if UNIT_TEST
       return String(kThreeLetterDayOfWeekStr).substr(
         (day_of_week + offset) * 3, 3);
-#else  // UNIT_TEST
+#elif defined(ARDUINO)
       return String(kThreeLetterDayOfWeekStr).substring(
+        (day_of_week + offset) * 3, (day_of_week + offset) * 3 + 3);
+#else  // UNIT_TEST
+      return String(kThreeLetterDayOfWeekStr).substr(
         (day_of_week + offset) * 3, (day_of_week + offset) * 3 + 3);
 #endif  // UNIT_TEST
     else

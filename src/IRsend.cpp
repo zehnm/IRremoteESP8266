@@ -4,7 +4,7 @@
 
 #include "IRsend.h"
 #ifndef UNIT_TEST
-#include <Arduino.h>
+#include "hal/framework.h"
 #else
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
@@ -47,13 +47,24 @@ IRsend::IRsend(uint16_t IRsendPin, bool inverted, bool use_modulation)
 ///
 /// This allows sending IR codes in parallel on multiple GPIO outputs.
 /// Attention: the caller is responsible to configure the GPIO pins as outputs!
+/// @param[in] inverted Optional flag to invert the output.
+///  The LED is illuminated when GPIO is LOW rather than HIGH.
 /// @param[in] use_modulation Do we do frequency modulation during transmission?
 ///  i.e. If not, assume a 100% duty cycle. Ignore attempts to change the
 ///  duty cycle etc.
 /// @param[in] ir_pin_mask GPIO output pin mask to use when sending an IR
 ///  command.
-IRsend::IRsend(bool use_modulation, uint32_t ir_pin_mask) : IRpin(ir_pin_mask),
-    periodOffset(kPeriodOffset), _irPinIsMask(true) {
+IRsend::IRsend(bool inverted, bool use_modulation, uint64_t ir_pin_mask) : 
+    periodOffset(kPeriodOffset), _irPinMaskEnabled(true) {
+  IRpin = static_cast<int32_t>(ir_pin_mask);
+  _irPinMaskUpper = static_cast<int32_t>(ir_pin_mask >> 32);
+  if (inverted) {
+    outputOn = LOW;
+    outputOff = HIGH;
+  } else {
+    outputOn = HIGH;
+    outputOff = LOW;
+  }
   modulation = use_modulation;
   if (modulation)
     _dutycycle = kDutyDefault;
@@ -65,18 +76,18 @@ IRsend::IRsend(bool use_modulation, uint32_t ir_pin_mask) : IRpin(ir_pin_mask),
 /// This call has no effect if a normal single GPIO output pin is used.
 /// @param ir_pin_mask the new GPIO output pin mask
 /// @return the old GPIO output pin mask
-uint32_t IRsend::setPinMask(uint32_t ir_pin_mask) {
-  if (!_irPinIsMask) {
+uint64_t IRsend::setPinMask(uint64_t ir_pin_mask) {
+  if (!_irPinMaskEnabled) {
     return 0;
   }
-  if (IRpin == ir_pin_mask) {
-    return ir_pin_mask;
-  }
+
   // Make sure the old outputs are turned off
   ledOff();
 
-  uint32_t old = IRpin;
-  IRpin = ir_pin_mask;
+  uint64_t old = (static_cast<int64_t>(_irPinMaskUpper)) << 32 | IRpin;;
+  IRpin = static_cast<int32_t>(ir_pin_mask);
+  _irPinMaskUpper = static_cast<int32_t>(ir_pin_mask >> 32);
+
   return old;
 }
 #endif
@@ -85,7 +96,7 @@ uint32_t IRsend::setPinMask(uint32_t ir_pin_mask) {
 void IRsend::begin() {
 #ifndef UNIT_TEST
 #if defined(ESP32)
-  if (!_irPinIsMask)
+  if (!_irPinMaskEnabled)
 #endif
     pinMode(static_cast<uint8_t>(IRpin), OUTPUT);
 #endif
@@ -96,9 +107,15 @@ void IRsend::begin() {
 void IRsend::ledOff() {
 #ifndef UNIT_TEST
 #if defined(ESP32)
-  if (_irPinIsMask)
-    GPIO.out_w1tc = IRpin;
-  else
+  if (_irPinMaskEnabled) {
+    if (outputOff == HIGH) {
+      GPIO.out_w1ts = IRpin;
+      GPIO.out1_w1ts.val = _irPinMaskUpper;
+    } else {
+      GPIO.out_w1tc = IRpin;
+      GPIO.out1_w1tc.val = _irPinMaskUpper;
+    }
+  } else
 #endif
     digitalWrite(static_cast<uint8_t>(IRpin), outputOff);
 #endif
@@ -108,9 +125,15 @@ void IRsend::ledOff() {
 void IRsend::ledOn() {
 #ifndef UNIT_TEST
 #if defined(ESP32)
-  if (_irPinIsMask)
-    GPIO.out_w1ts = IRpin;
-  else
+  if (_irPinMaskEnabled) {
+    if (outputOff == HIGH) {
+      GPIO.out_w1tc = IRpin;
+      GPIO.out1_w1tc.val = _irPinMaskUpper;
+    } else {
+      GPIO.out_w1ts = IRpin;
+      GPIO.out1_w1ts.val = _irPinMaskUpper;
+    }
+  } else
 #endif
     digitalWrite(static_cast<uint8_t>(IRpin), outputOn);
 #endif

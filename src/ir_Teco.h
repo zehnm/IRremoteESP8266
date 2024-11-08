@@ -11,7 +11,7 @@
 #define IR_TECO_H_
 
 #ifndef UNIT_TEST
-#include <Arduino.h>
+#include "hal/framework.h"
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"

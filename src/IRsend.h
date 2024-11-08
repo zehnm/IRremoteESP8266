@@ -243,8 +243,8 @@ class IRsend {
   explicit IRsend(uint16_t IRsendPin, bool inverted = false,
                   bool use_modulation = true);
 #if defined(ESP32)
-  explicit IRsend(bool use_modulation, uint32_t ir_pin_mask);
-  uint32_t setPinMask(uint32_t ir_pin_mask);
+  explicit IRsend(bool inverted, bool use_modulation, uint64_t ir_pin_mask);
+  uint64_t setPinMask(uint64_t ir_pin_mask);
 #endif
   void begin();
   void enableIROut(uint32_t freq, uint8_t duty = kDutyDefault);
@@ -938,9 +938,13 @@ class IRsend {
 #endif  // SEND_SONY
 
   RepeatCallbackFunction _repeatCB = nullptr;
+  
 #if defined(ESP32)
   // Use a pinmask for IR output instead a single pin.
-  bool _irPinIsMask;
+  // IRpin holds the lower 32 bit GPIO pinmask (instead of a single GPIO number).
+  bool _irPinMaskEnabled;
+  // Upper 32 bit GPIO pinmask.
+  uint32_t _irPinMaskUpper;
 #endif
 };
 
