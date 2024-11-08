@@ -1,4 +1,4 @@
-    #!/usr/bin/python
+#!/usr/bin/python3
 """Convert IRremoteESP8266's Raw data output into Pronto Code."""
 #
 # Copyright 2020 David Conran

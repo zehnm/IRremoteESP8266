@@ -4,7 +4,7 @@
 // Copyright 2019 David Conran
 
 #ifndef UNIT_TEST
-#include <Arduino.h>
+#include "hal/framework.h"
 #else
 #include <memory>
 #endif

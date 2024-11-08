@@ -6,7 +6,7 @@
 
 #include "IRtext.h"
 #ifndef UNIT_TEST
-#include <Arduino.h>
+#include "hal/framework.h"
 #endif  // UNIT_TEST
 #include "IRremoteESP8266.h"
 #include "i18n.h"

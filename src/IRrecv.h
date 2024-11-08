@@ -7,7 +7,7 @@
 #define IRRECV_H_
 
 #ifndef UNIT_TEST
-#include <Arduino.h>
+#include "hal/framework.h"
 #endif
 #include <stddef.h>
 #define __STDC_LIMIT_MACROS
@@ -52,7 +52,7 @@ const uint16_t kMaxTimeoutMs = kRawTick * (UINT16_MAX / MS_TO_USEC(1));
 const uint32_t kFnvPrime32 = 16777619UL;
 const uint32_t kFnvBasis32 = 2166136261UL;
 
-#ifdef ESP32
+#if defined(ESP32)
 // Which of the ESP32 timers to use by default.
 // (3 for most ESP32s, 1 for ESP32-C3s)
 #ifdef SOC_TIMER_GROUP_TOTAL_TIMERS

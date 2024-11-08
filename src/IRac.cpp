@@ -6,7 +6,7 @@
 
 #include "IRac.h"
 #ifndef UNIT_TEST
-#include <Arduino.h>
+#include "hal/framework.h"
 #endif
 #include <string.h>
 #ifndef ARDUINO

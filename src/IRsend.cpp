@@ -4,7 +4,7 @@
 
 #include "IRsend.h"
 #ifndef UNIT_TEST
-#include <Arduino.h>
+#include "hal/framework.h"
 #else
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
@@ -47,13 +47,22 @@ IRsend::IRsend(uint16_t IRsendPin, bool inverted, bool use_modulation)
 ///
 /// This allows sending IR codes in parallel on multiple GPIO outputs.
 /// Attention: the caller is responsible to configure the GPIO pins as outputs!
+/// @param[in] inverted Optional flag to invert the output. (default = false)
+///  e.g. LED is illuminated when GPIO is LOW rather than HIGH.
 /// @param[in] use_modulation Do we do frequency modulation during transmission?
 ///  i.e. If not, assume a 100% duty cycle. Ignore attempts to change the
 ///  duty cycle etc.
 /// @param[in] ir_pin_mask GPIO output pin mask to use when sending an IR
 ///  command.
-IRsend::IRsend(bool use_modulation, uint32_t ir_pin_mask) : IRpin(ir_pin_mask),
+IRsend::IRsend(bool inverted, bool use_modulation, uint32_t ir_pin_mask) : IRpin(ir_pin_mask),
     periodOffset(kPeriodOffset), _irPinIsMask(true) {
+  if (inverted) {
+    outputOn = LOW;
+    outputOff = HIGH;
+  } else {
+    outputOn = HIGH;
+    outputOff = LOW;
+  }
   modulation = use_modulation;
   if (modulation)
     _dutycycle = kDutyDefault;

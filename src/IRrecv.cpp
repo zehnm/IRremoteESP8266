@@ -12,7 +12,7 @@ extern "C" {
 #include <user_interface.h>
 }
 #endif  // ESP8266
-#include <Arduino.h>
+#include "hal/framework.h"
 #endif  // UNIT_TEST
 #include <algorithm>
 #ifdef UNIT_TEST
@@ -302,7 +302,11 @@ IRrecv::IRrecv(const uint16_t recvpin, const uint16_t bufsize,
         "Could not allocate memory for the primary IR buffer.\n"
         "Try a smaller size for CAPTURE_BUFFER_SIZE.\nRebooting!");
 #ifndef UNIT_TEST
+#ifdef ARDUINO
     ESP.restart();  // Mem alloc failure. Reboot.
+#else
+    esp_restart();
+#endif
 #endif
   }
   // If we have been asked to use a save buffer (for decoding), then create one.
@@ -315,7 +319,11 @@ IRrecv::IRrecv(const uint16_t recvpin, const uint16_t bufsize,
           "Could not allocate memory for the second IR buffer.\n"
           "Try a smaller size for CAPTURE_BUFFER_SIZE.\nRebooting!");
 #ifndef UNIT_TEST
-      ESP.restart();  // Mem alloc failure. Reboot.
+#ifdef ARDUINO
+    ESP.restart();  // Mem alloc failure. Reboot.
+#else
+    esp_restart();
+#endif
 #endif
     }
   } else {
