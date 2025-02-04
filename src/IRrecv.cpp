@@ -368,12 +368,12 @@ void IRrecv::enableIRIn(const bool pullup) {
   // Initialise the ESP32 timer.
   // 80MHz / 80 = 1 uSec granularity.
   timer = timerBegin(_timer_num, 80, true);
-#ifdef DEBUG
+#ifdef IR_DEBUG
   if (timer == NULL) {
     DPRINT("FATAL: Unable enable system timer: ");
     DPRINTLN((uint16_t)_timer_num);
   }
-#endif  // DEBUG
+#endif  // IR_DEBUG
   assert(timer != NULL);  // Check we actually got the timer.
   // Set the timer so it only fires once, and set it's trigger in uSeconds.
   timerAlarmWrite(timer, MS_TO_USEC(params.timeout), ONCE);

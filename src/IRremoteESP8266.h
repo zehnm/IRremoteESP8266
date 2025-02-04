@@ -1503,9 +1503,9 @@ const uint16_t kYorkStateLength = 17;
 #define WHYNTER_BITS                  kWhynterBits
 
 // Turn on Debugging information by uncommenting the following line.
-// #define DEBUG 1
+// #define IR_DEBUG 1
 
-#ifdef DEBUG
+#ifdef IR_DEBUG
 #ifdef UNIT_TEST
 #define DPRINT(x) do { \
     std::cout << x; \
@@ -1525,7 +1525,6 @@ const uint16_t kYorkStateLength = 17;
   Serial.println(x); \
   } \
   while (0)
-#endif  // ARDUINO
 #elif defined(ESP32)
 #define DPRINT(x) do { \
     std::cout << x; \
@@ -1533,10 +1532,11 @@ const uint16_t kYorkStateLength = 17;
 #define DPRINTLN(x) do { \
     std::cout << x << std::endl; \
   } while (0)
-#else  // DEBUG
+#endif  // ARDUINO
+#else  // IR_DEBUG
 #define DPRINT(x)
 #define DPRINTLN(x)
-#endif  // DEBUG
+#endif  // IR_DEBUG
 
 #ifdef UNIT_TEST
 #ifndef F
