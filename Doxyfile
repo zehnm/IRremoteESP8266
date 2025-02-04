@@ -4,6 +4,7 @@ INPUT                  = src
 INPUT                  += docs/doxygen_index.md
 RECURSIVE              = YES
 EXCLUDE                = examples
+EXCLUDE                += src/hal
 MULTILINE_CPP_IS_BRIEF = YES
 TAB_SIZE               = 2
 EXTRACT_ALL            = YES
