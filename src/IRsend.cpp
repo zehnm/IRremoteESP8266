@@ -54,7 +54,7 @@ IRsend::IRsend(uint16_t IRsendPin, bool inverted, bool use_modulation)
 ///  duty cycle etc.
 /// @param[in] ir_pin_mask GPIO output pin mask to use when sending an IR
 ///  command.
-IRsend::IRsend(bool inverted, bool use_modulation, uint64_t ir_pin_mask) : 
+IRsend::IRsend(bool inverted, bool use_modulation, uint64_t ir_pin_mask) :
     periodOffset(kPeriodOffset), _irPinMaskEnabled(true) {
   IRpin = static_cast<int32_t>(ir_pin_mask);
   _irPinMaskUpper = static_cast<int32_t>(ir_pin_mask >> 32);
@@ -115,9 +115,11 @@ void IRsend::ledOff() {
       GPIO.out_w1tc = IRpin;
       GPIO.out1_w1tc.val = _irPinMaskUpper;
     }
-  } else
-#endif
+  } else {
     digitalWrite(static_cast<uint8_t>(IRpin), outputOff);
+  }
+#endif
+  digitalWrite(static_cast<uint8_t>(IRpin), outputOff);
 #endif
 }
 
@@ -133,9 +135,11 @@ void IRsend::ledOn() {
       GPIO.out_w1ts = IRpin;
       GPIO.out1_w1ts.val = _irPinMaskUpper;
     }
-  } else
-#endif
+  } else {
     digitalWrite(static_cast<uint8_t>(IRpin), outputOn);
+  }
+#endif
+  digitalWrite(static_cast<uint8_t>(IRpin), outputOn);
 #endif
 }
 

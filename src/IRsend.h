@@ -953,10 +953,10 @@ class IRsend {
 #endif  // SEND_SONY
 
   RepeatCallbackFunction _repeatCB = nullptr;
-  
+
 #if defined(ESP32)
   // Use a pinmask for IR output instead a single pin.
-  // IRpin holds the lower 32 bit GPIO pinmask (instead of a single GPIO number).
+  // IRpin holds the lower 32 bit GPIO pinmask, instead of a single GPIO number
   bool _irPinMaskEnabled;
   // Upper 32 bit GPIO pinmask.
   uint32_t _irPinMaskUpper;
