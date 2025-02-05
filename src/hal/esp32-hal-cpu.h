@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Source: https://github.com/espressif/arduino-esp32/blob/09a6770320b75c219053aa19d630afe1a7c61147/cores/esp32/esp32-hal-cpu.c
+// Source: https://github.com/espressif/arduino-esp32/blob/idf-release/v5.4/cores/esp32/esp32-hal-cpu.h
+// Stripped down version, only required code for IRremoteESP8266 is included
 
 #ifndef _ESP32_HAL_CPU_H_
 #define _ESP32_HAL_CPU_H_
@@ -21,18 +22,18 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 typedef enum { APB_BEFORE_CHANGE, APB_AFTER_CHANGE } apb_change_ev_t;
 
-typedef void (* apb_change_cb_t)(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
+typedef void (*apb_change_cb_t)(void *arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
 
-bool addApbChangeCallback(void * arg, apb_change_cb_t cb);
-bool removeApbChangeCallback(void * arg, apb_change_cb_t cb);
+bool addApbChangeCallback(void *arg, apb_change_cb_t cb);
+bool removeApbChangeCallback(void *arg, apb_change_cb_t cb);
 
-uint32_t getApbFrequency();
+uint32_t getApbFrequency();  // In Hz
 
 #ifdef __cplusplus
 }

@@ -17,7 +17,7 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-// Source: https://github.com/espressif/arduino-esp32/blob/09a6770320b75c219053aa19d630afe1a7c61147/cores/esp32/esp32-hal-gpio.h
+// Source: https://github.com/espressif/arduino-esp32/blob/idf-release/v5.4/cores/esp32/esp32-hal-gpio.h
 
 #ifndef MAIN_ESP32_HAL_GPIO_H_
 #define MAIN_ESP32_HAL_GPIO_H_

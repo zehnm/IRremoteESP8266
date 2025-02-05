@@ -18,34 +18,37 @@
  */
 
 // Stripped down version
-// Source: https://github.com/espressif/arduino-esp32/blob/b31c9361ec73b043ff9175b4cd48388637a7171b/cores/esp32/esp32-hal.h
+// Source:
+// https://github.com/espressif/arduino-esp32/blob/b31c9361ec73b043ff9175b4cd48388637a7171b/cores/esp32/esp32-hal.h
 
 #ifndef HAL_ESP32_HAL_H_
 #define HAL_ESP32_HAL_H_
 
-#include <stdint.h>
+#include <inttypes.h>
+#include <math.h>
+#include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <inttypes.h>
 #include <string.h>
-#include <math.h>
-#include "sdkconfig.h"
-#include "esp_system.h"
+
 #include "esp_sleep.h"
+#include "esp_system.h"
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "freertos/event_groups.h"
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
-#include "freertos/event_groups.h"
+#include "freertos/task.h"
+
+#include "sdkconfig.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #ifndef F_CPU
-#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#if CONFIG_IDF_TARGET_ESP32  // ESP32/PICO-D4
 #define F_CPU (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000U)
 #elif CONFIG_IDF_TARGET_ESP32S2
 #define F_CPU (CONFIG_ESP32S2_DEFAULT_CPU_FREQ_MHZ * 1000000U)
@@ -68,22 +71,23 @@ extern "C" {
 #define ARDUINO_EVENT_RUNNING_CORE CONFIG_ARDUINO_EVENT_RUNNING_CORE
 #endif
 
-//forward declaration from freertos/portmacro.h
+// forward declaration from freertos/portmacro.h
 void vPortYield(void);
 void yield(void);
 #define optimistic_yield(u)
 
 #define ESP_REG(addr) *((volatile uint32_t *)(addr))
-#define NOP() asm volatile ("nop")
+#define NOP() asm volatile("nop")
 
+#include "esp32-hal-cpu.h"
 #include "esp32-hal-gpio.h"
 #include "esp32-hal-timer.h"
-#include "esp32-hal-cpu.h"
+#include "esp_arduino_version.h"
 
 unsigned long micros();
 unsigned long millis();
-void delay(uint32_t);
-void delayMicroseconds(uint32_t us);
+void          delay(uint32_t);
+void          delayMicroseconds(uint32_t us);
 
 #ifdef __cplusplus
 }

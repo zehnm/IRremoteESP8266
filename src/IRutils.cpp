@@ -822,16 +822,13 @@ String addDayToString(const uint8_t day_of_week, const int8_t offset,
 /// @return The resulting String.
 String dayToString(const uint8_t day_of_week, const int8_t offset) {
   if ((uint8_t)(day_of_week + offset) < 7)
-#if UNIT_TEST
+#if defined(ARDUINO)
+      return String(kThreeLetterDayOfWeekStr).substring(
+        (day_of_week + offset) * 3, (day_of_week + offset) * 3 + 3);
+#else  // ARDUINO
       return String(kThreeLetterDayOfWeekStr).substr(
         (day_of_week + offset) * 3, 3);
-#elif defined(ARDUINO)
-      return String(kThreeLetterDayOfWeekStr).substring(
-        (day_of_week + offset) * 3, (day_of_week + offset) * 3 + 3);
-#else  // UNIT_TEST
-      return String(kThreeLetterDayOfWeekStr).substring(
-        (day_of_week + offset) * 3, (day_of_week + offset) * 3 + 3);
-#endif  // UNIT_TEST
+#endif  // ARDUINO
   else
     return kUnknownStr;
 }
