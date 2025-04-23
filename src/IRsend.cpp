@@ -51,8 +51,8 @@ IRsend::IRsend(uint16_t IRsendPin, bool inverted, bool use_modulation)
 ///  i.e. If not, assume a 100% duty cycle. Ignore attempts to change the
 ///  duty cycle etc.
 /// @param[in] w1ts_mask mask for setting GPIOs for a logical 1 output.
-/// @param[in] w1tc_mask mask for clearing GPIOs for a logical 1 output. Required if some outputs are inverted.
-///  command.
+/// @param[in] w1tc_mask mask for clearing GPIOs for a logical 1 output.
+///  Required if some outputs are inverted.
 IRsend::IRsend(bool use_modulation, int64_t w1ts_mask, uint64_t w1tc_mask) :
     periodOffset(kPeriodOffset), _irPinMaskEnabled(true) {
   IRpin = static_cast<int32_t>(w1ts_mask);
@@ -71,7 +71,8 @@ IRsend::IRsend(bool use_modulation, int64_t w1ts_mask, uint64_t w1tc_mask) :
 /// Set a new GPIO output pin mask for parallel output.
 /// This call has no effect if a normal single GPIO output pin is used.
 /// @param[in] w1ts_mask mask for setting GPIOs for a logical 1 output.
-/// @param[in] w1tc_mask mask for clearing GPIOs for a logical 1 output. Required if some outputs are inverted.
+/// @param[in] w1tc_mask mask for clearing GPIOs for a logical 1 output.
+///  Required if some outputs are inverted.
 /// @return false if pinmask mode is not enabled.
 bool IRsend::setPinMask(uint64_t w1ts_mask, uint64_t w1tc_mask) {
   if (!_irPinMaskEnabled) {
