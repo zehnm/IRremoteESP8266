@@ -250,8 +250,8 @@ class IRsend {
   explicit IRsend(uint16_t IRsendPin, bool inverted = false,
                   bool use_modulation = true);
 #if defined(ESP32)
-  explicit IRsend(bool inverted, bool use_modulation, uint64_t ir_pin_mask);
-  uint64_t setPinMask(uint64_t ir_pin_mask);
+  explicit IRsend(bool use_modulation, int64_t w1ts_mask, uint64_t w1tc_mask);
+  bool setPinMask(uint64_t w1ts_mask, uint64_t w1tc_mask);
 #endif
   void begin();
   void enableIROut(uint32_t freq, uint8_t duty = kDutyDefault);
@@ -958,8 +958,14 @@ class IRsend {
   // Use a pinmask for IR output instead a single pin.
   // IRpin holds the lower 32 bit GPIO pinmask, instead of a single GPIO number
   bool _irPinMaskEnabled;
-  // Upper 32 bit GPIO pinmask.
-  uint32_t _irPinMaskUpper;
+  // Upper 32 bit GPIO pinmask for setting outputs.
+  uint32_t _w1ts_mask_upper;
+  // // GPIO pin mask for setting outputs
+  // uint64_t _w1ts_mask;
+  // Lower GPIO pin mask for clearing outputs (inverted outputs)
+  uint32_t _w1tc_mask_lower;
+  // Upper GPIO pin mask for clearing outputs (inverted outputs)
+  uint32_t _w1tc_mask_upper;
 #endif
 };
 

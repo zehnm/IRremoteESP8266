@@ -47,24 +47,20 @@ IRsend::IRsend(uint16_t IRsendPin, bool inverted, bool use_modulation)
 ///
 /// This allows sending IR codes in parallel on multiple GPIO outputs.
 /// Attention: the caller is responsible to configure the GPIO pins as outputs!
-/// @param[in] inverted Optional flag to invert the output.
-///  The LED is illuminated when GPIO is LOW rather than HIGH.
 /// @param[in] use_modulation Do we do frequency modulation during transmission?
 ///  i.e. If not, assume a 100% duty cycle. Ignore attempts to change the
 ///  duty cycle etc.
-/// @param[in] ir_pin_mask GPIO output pin mask to use when sending an IR
-///  command.
-IRsend::IRsend(bool inverted, bool use_modulation, uint64_t ir_pin_mask) :
+/// @param[in] w1ts_mask mask for setting GPIOs for a logical 1 output.
+/// @param[in] w1tc_mask mask for clearing GPIOs for a logical 1 output.
+///  Required if some outputs are inverted.
+IRsend::IRsend(bool use_modulation, int64_t w1ts_mask, uint64_t w1tc_mask) :
     periodOffset(kPeriodOffset), _irPinMaskEnabled(true) {
-  IRpin = static_cast<int32_t>(ir_pin_mask);
-  _irPinMaskUpper = static_cast<int32_t>(ir_pin_mask >> 32);
-  if (inverted) {
-    outputOn = LOW;
-    outputOff = HIGH;
-  } else {
-    outputOn = HIGH;
-    outputOff = LOW;
-  }
+  IRpin = static_cast<int32_t>(w1ts_mask);
+  _w1ts_mask_upper = static_cast<int32_t>(w1ts_mask >> 32);
+  _w1tc_mask_lower = static_cast<int32_t>(w1tc_mask);
+  _w1tc_mask_upper = static_cast<int32_t>(w1tc_mask >> 32);
+  outputOn = HIGH;
+  outputOff = LOW;
   modulation = use_modulation;
   if (modulation)
     _dutycycle = kDutyDefault;
@@ -72,23 +68,26 @@ IRsend::IRsend(bool inverted, bool use_modulation, uint64_t ir_pin_mask) :
     _dutycycle = kDutyMax;
 }
 
-/// Set a new GPIO output pin mask.
+/// Set a new GPIO output pin mask for parallel output.
 /// This call has no effect if a normal single GPIO output pin is used.
-/// @param ir_pin_mask the new GPIO output pin mask
-/// @return the old GPIO output pin mask
-uint64_t IRsend::setPinMask(uint64_t ir_pin_mask) {
+/// @param[in] w1ts_mask mask for setting GPIOs for a logical 1 output.
+/// @param[in] w1tc_mask mask for clearing GPIOs for a logical 1 output.
+///  Required if some outputs are inverted.
+/// @return false if pinmask mode is not enabled.
+bool IRsend::setPinMask(uint64_t w1ts_mask, uint64_t w1tc_mask) {
   if (!_irPinMaskEnabled) {
-    return 0;
+    return false;
   }
 
   // Make sure the old outputs are turned off
   ledOff();
 
-  uint64_t old = (static_cast<int64_t>(_irPinMaskUpper)) << 32 | IRpin;;
-  IRpin = static_cast<int32_t>(ir_pin_mask);
-  _irPinMaskUpper = static_cast<int32_t>(ir_pin_mask >> 32);
+  IRpin = static_cast<int32_t>(w1ts_mask);
+  _w1ts_mask_upper = static_cast<int32_t>(w1ts_mask >> 32);
+  _w1tc_mask_lower = static_cast<int32_t>(w1tc_mask);
+  _w1tc_mask_upper = static_cast<int32_t>(w1tc_mask >> 32);
 
-  return old;
+  return true;
 }
 #endif
 
@@ -110,10 +109,14 @@ void IRsend::ledOff() {
   if (_irPinMaskEnabled) {
     if (outputOff == HIGH) {
       GPIO.out_w1ts = IRpin;
-      GPIO.out1_w1ts.val = _irPinMaskUpper;
+      GPIO.out1_w1ts.val = _w1ts_mask_upper;
+      GPIO.out_w1tc = _w1tc_mask_lower;
+      GPIO.out1_w1tc.val = _w1tc_mask_upper;
     } else {
       GPIO.out_w1tc = IRpin;
-      GPIO.out1_w1tc.val = _irPinMaskUpper;
+      GPIO.out1_w1tc.val = _w1ts_mask_upper;
+      GPIO.out_w1ts = _w1tc_mask_lower;
+      GPIO.out1_w1ts.val = _w1tc_mask_upper;
     }
   } else {
     digitalWrite(static_cast<uint8_t>(IRpin), outputOff);
@@ -130,10 +133,14 @@ void IRsend::ledOn() {
   if (_irPinMaskEnabled) {
     if (outputOff == HIGH) {
       GPIO.out_w1tc = IRpin;
-      GPIO.out1_w1tc.val = _irPinMaskUpper;
+      GPIO.out1_w1tc.val = _w1ts_mask_upper;
+      GPIO.out_w1ts = _w1tc_mask_lower;
+      GPIO.out1_w1ts.val = _w1tc_mask_upper;
     } else {
       GPIO.out_w1ts = IRpin;
-      GPIO.out1_w1ts.val = _irPinMaskUpper;
+      GPIO.out1_w1ts.val = _w1ts_mask_upper;
+      GPIO.out_w1tc = _w1tc_mask_lower;
+      GPIO.out1_w1tc.val = _w1tc_mask_upper;
     }
   } else {
     digitalWrite(static_cast<uint8_t>(IRpin), outputOn);
