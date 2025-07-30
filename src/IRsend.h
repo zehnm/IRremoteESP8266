@@ -929,9 +929,9 @@ class IRsend {
 #else
   uint32_t _freq_unittest;
 #endif  // UNIT_TEST
-  uint16_t onTimePeriod; // Fixed point.
-  uint16_t offTimePeriod; // Fixed point.
-  uint8_t _fractionalBits; // Number of fractional bits in on/offTimePeriod.
+  uint16_t onTimePeriod;  // Fixed point.
+  uint16_t offTimePeriod;  // Fixed point.
+  uint8_t _fractionalBits;  // Number of fractional bits in on/offTimePeriod.
   uint32_t IRpin;
   uint8_t _dutycycle;
   bool modulation;

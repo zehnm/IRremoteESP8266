@@ -193,13 +193,13 @@ void IRsend::enableIROut(uint32_t freq, uint8_t duty) {
   uint32_t period = calcUSecPeriod(freq);
 
   // Decrement the number of fractional bits until the period fits.
-  while (maxValue < period)
-  {
+  while (maxValue < period) {
     --_fractionalBits;
     maxValue = 0x7FFF >> _fractionalBits;
   }
 
-  uint32_t fixedPointPeriod = ((1000000ULL << _fractionalBits) + freq / 2) / freq;
+  uint32_t fixedPointPeriod = ((1000000ULL << _fractionalBits) + freq / 2)
+                              / freq;
 
   // Nr. of uSeconds the LED will be on per pulse.
   onTimePeriod = (fixedPointPeriod * _dutycycle) / kDutyMax;
@@ -274,14 +274,17 @@ uint16_t IRsend::mark(uint16_t usec) {
   IRtimer usecTimer = IRtimer();
 #ifndef UNIT_TEST
 #if SEND_BANG_OLUFSEN && ESP8266 && F_CPU < 160000000L
-  // Free running loop to attempt to get close to the 455 kHz required by Bang & Olufsen.
-  // Define BANG_OLUFSEN_CHECK_MODULATION temporarily to test frequency and time.
+  // Free running loop to attempt to get close to the 455 kHz required by
+  // Bang & Olufsen.
+  // Define BANG_OLUFSEN_CHECK_MODULATION temporarily to test frequency and
+  // time.
   // Runs at ~300 kHz on an 80 MHz ESP8266.
   // This is far from ideal but works if the transmitter is close enough.
   uint32_t periodUInt = (onTimePeriod + offTimePeriod) >> _fractionalBits;
-  periodUInt = std::max(uint32_t(1), periodUInt);
+  periodUInt = std::max(static_cast<uint32_t>(1), periodUInt);
   if (periodUInt <= 5) {
-    uint32_t nextCheck = usec / periodUInt / 2; // Assume we can at least run for this number of periods.
+    // Assume we can at least run for this number of periods.
+    uint32_t nextCheck = usec / periodUInt / 2;
     for (;;) {  // nextStop is not updated in this loop.
       ledOn();
       ledOff();
@@ -301,25 +304,31 @@ uint16_t IRsend::mark(uint16_t usec) {
 #endif
 
   // Use absolute time for zero drift (but slightly uneven period).
-  // Using IRtimer.elapsed() instead of _delayMicroseconds is better for short period times.
+  // Using IRtimer.elapsed() instead of _delayMicroseconds is better for short
+  // period times.
   // Maxed out at ~190 kHz on an 80 MHz ESP8266.
   // Maxed out at ~460 kHz on ESP32.
-  uint32_t nextStop = 0; // Must be 32 bits to not overflow when usec is near max.
-  while ((nextStop >> _fractionalBits) < usec) {  // Loop until we've met/exceeded our required time.
+  // Must be 32 bits to not overflow when usec is near max.
+  uint32_t nextStop = 0;
+  // Loop until we've met/exceeded our required time.
+  while ((nextStop >> _fractionalBits) < usec) {
     ledOn();
     nextStop += onTimePeriod;
-    uint32_t nextStopUInt = std::min(nextStop >> _fractionalBits, uint32_t(usec));
-    while(usecTimer.elapsed() < nextStopUInt);
+    uint32_t nextStopUInt = std::min(nextStop >>
+                            _fractionalBits, static_cast<uint32_t>(usec));
+    while (usecTimer.elapsed() < nextStopUInt) {}
     ledOff();
     counter++;
     nextStop += offTimePeriod;
-    nextStopUInt = std::min(nextStop >> _fractionalBits, uint32_t(usec));
+    nextStopUInt = std::min(nextStop >>
+                   _fractionalBits, static_cast<uint32_t>(usec));
     uint32_t now = usecTimer.elapsed();
     int32_t delay = nextStopUInt - now;
     if (delay > 0) {
-      while(usecTimer.elapsed() < nextStopUInt);
+      while (usecTimer.elapsed() < nextStopUInt) {}
     } else {
-      // This means we ran past nextStop and need to reset to actual time to avoid playing catch-up with a far too short period.
+      // This means we ran past nextStop and need to reset to actual time to
+      // avoid playing catch-up with a far too short period.
       nextStop = (now << _fractionalBits) + (offTimePeriod >> 1);
     }
   }
