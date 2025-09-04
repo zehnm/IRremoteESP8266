@@ -86,8 +86,19 @@ void yield(void);
 
 unsigned long micros();
 unsigned long millis();
-void          delay(uint32_t);
-void          delayMicroseconds(uint32_t us);
+
+/// @brief Delay for given milliseconds.
+///
+/// Attention: uses vTaskDelay and the actual time that the task remains
+/// blocked depends on the tick rate!
+/// With the default tick rate of 100Hz, the resolution is 10ms.
+/// Any time below that value might not delay the task at all.
+/// @param ms milliseconds to wait.
+void delay(uint32_t ms);
+
+/// @brief **Busy wait** for the given microseconds.
+/// @param us microseconds to wait.
+void delayMicroseconds(uint32_t us);
 
 #ifdef __cplusplus
 }

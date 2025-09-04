@@ -226,10 +226,18 @@ void IRsend::_delayMicroseconds(uint32_t usec) {
 #endif
   } else {
 #ifndef UNIT_TEST
+    // Delay can be quite inaccurate by suspending a task: keep track of the
+    // real delay. The first delay call might suspend the task, but not delay
+    // it as requested. This depends on the tick rate (see vTaskDelay).
+    IRtimer timer = IRtimer();
     // Invoke a delay(), where possible, to avoid triggering the WDT.
     delay(usec / 1000UL);  // Delay for as many whole milliseconds as we can.
-    // Delay the remaining sub-millisecond.
-    delayMicroseconds(static_cast<uint16_t>(usec % 1000UL));
+    uint32_t elapsed = timer.elapsed();
+    // Busy wait for the remaining sub-millisecond + leftovers from the timer
+    // tick interval in the above delay call.
+    if (elapsed < usec) {
+      delayMicroseconds(static_cast<uint16_t>(usec - elapsed));
+    }
 #endif
   }
 }
