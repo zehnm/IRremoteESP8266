@@ -16,7 +16,7 @@
 #endif
 #include "IRtimer.h"
 
-#if (defined(ESP32) || defined(ESP8266)) && !defined(UNIT_TEST)
+#if defined(ESP32) && !defined(UNIT_TEST)
 static portMUX_TYPE timingMux = portMUX_INITIALIZER_UNLOCKED;
 #endif
 
@@ -108,13 +108,13 @@ void IRsend::begin() {
 }
 
 void IRsend::beginCritical() {
-#if (defined(ESP32) || defined(ESP8266)) && !defined(UNIT_TEST)
+#if defined(ESP32) && !defined(UNIT_TEST)
   portENTER_CRITICAL(&timingMux);
 #endif
 }
-  
+
 void IRsend::endCritical() {
-#if (defined(ESP32) || defined(ESP8266)) && !defined(UNIT_TEST)
+#if defined(ESP32) && !defined(UNIT_TEST)
   portEXIT_CRITICAL(&timingMux);
   vTaskDelay(1);  // Yield to the OS.
 #endif
