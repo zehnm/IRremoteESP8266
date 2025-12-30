@@ -16,6 +16,10 @@
 #endif
 #include "IRtimer.h"
 
+#if (defined(ESP32) || defined(ESP8266)) && !defined(UNIT_TEST)
+static portMUX_TYPE timingMux = portMUX_INITIALIZER_UNLOCKED;
+#endif
+
 /// Constructor for an IRsend object.
 /// @param[in] IRsendPin Which GPIO pin to use when sending an IR command.
 /// @param[in] inverted Optional flag to invert the output. (default = false)
@@ -101,6 +105,19 @@ void IRsend::begin() {
     pinMode(static_cast<uint8_t>(IRpin), OUTPUT);
 #endif
   ledOff();  // Ensure the LED is in a known safe state when we start.
+}
+
+void IRsend::beginCritical() {
+#if (defined(ESP32) || defined(ESP8266)) && !defined(UNIT_TEST)
+  portENTER_CRITICAL(&timingMux);
+#endif
+}
+  
+void IRsend::endCritical() {
+#if (defined(ESP32) || defined(ESP8266)) && !defined(UNIT_TEST)
+  portEXIT_CRITICAL(&timingMux);
+  vTaskDelay(1);  // Yield to the OS.
+#endif
 }
 
 /// Turn off the IR LED.
@@ -509,6 +526,7 @@ void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
   // We always send a message, even for repeat=0, hence '<= repeat'.
   for (uint16_t r = 0; r <= repeat
        || (repeat > 0 && _repeatCB && _repeatCB()); r++) {
+    beginCritical();
     usecs.reset();
 
     // Header
@@ -526,6 +544,8 @@ void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
       space(gap);
     else
       space(std::max(gap, mesgtime - elapsed));
+
+    endCritical();
   }
 }
 
@@ -567,6 +587,7 @@ void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
   // We always send a message, even for repeat=0, hence '<= repeat'.
   for (uint16_t r = 0; r <= repeat
        || (repeat > 0 && _repeatCB && _repeatCB()); r++) {
+    beginCritical();
     // Header
     if (headermark) mark(headermark);
     if (headerspace) space(headerspace);
@@ -579,6 +600,7 @@ void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
     // Footer
     if (footermark) mark(footermark);
     space(gap);
+    endCritical();
   }
 }
 
@@ -666,6 +688,7 @@ void IRsend::sendManchester(const uint16_t headermark,
 
   // We always send a message, even for repeat=0, hence '<= repeat'.
   for (uint16_t r = 0; r <= repeat; r++) {
+    beginCritical();
     // Header
     if (headermark) mark(headermark);
     if (headerspace) space(headerspace);
@@ -674,6 +697,7 @@ void IRsend::sendManchester(const uint16_t headermark,
     // Footer
     if (footermark) mark(footermark);
     if (gap) space(gap);
+    endCritical();
   }
 }
 
@@ -699,6 +723,7 @@ void IRsend::sendRaw(const uint16_t buf[], const uint16_t len,
                      uint32_t repeat_gap) {
   // Set IR carrier frequency
   enableIROut(hz);
+  beginCritical();
   // Determine if we need to add a gap between repeats.
   // Odd length = ends with mark (needs gap), even length = ends with space.
   const bool needs_repeat_gap = (len & 1);
@@ -731,6 +756,7 @@ void IRsend::sendRaw(const uint16_t buf[], const uint16_t len,
     }
   }
   ledOff();  // We potentially have ended with a mark(), so turn of the LED.
+  endCritical();
 }
 #endif  // SEND_RAW
 
