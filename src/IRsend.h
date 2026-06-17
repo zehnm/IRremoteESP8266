@@ -248,7 +248,8 @@ class IRsend {
   VIRTUAL uint16_t mark(uint16_t usec);
   VIRTUAL void space(uint32_t usec);
   int8_t calibrate(uint16_t hz = 38000U);
-  void sendRaw(const uint16_t buf[], const uint16_t len, const uint16_t hz);
+  void sendRaw(const uint16_t buf[], const uint16_t len, const uint16_t hz,
+               uint16_t repeat = kNoRepeat);
   void sendData(uint16_t onemark, uint32_t onespace, uint16_t zeromark,
                 uint32_t zerospace, uint64_t data, uint16_t nbits,
                 bool MSBfirst = true);

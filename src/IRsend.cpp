@@ -713,18 +713,23 @@ void IRsend::sendManchester(const uint16_t headermark,
 /// @param[in] buf An array of uint16_t's that has microseconds elements.
 /// @param[in] len Nr. of elements in the buf[] array.
 /// @param[in] hz Frequency to send the message at. (kHz < 1000; Hz >= 1000)
+/// @param[in] repeat The number of times the full command is to be repeated.
 /// @note Even elements are Mark times (On), Odd elements are Space times (Off).
 /// Ref:
 ///   examples/IRrecvDumpV2/IRrecvDumpV2.ino (or later)
 void IRsend::sendRaw(const uint16_t buf[], const uint16_t len,
-                     const uint16_t hz) {
+                     const uint16_t hz, uint16_t repeat) {
   // Set IR carrier frequency
   enableIROut(hz);
-  for (uint16_t i = 0; i < len; i++) {
-    if (i & 1) {  // Odd bit.
-      space(buf[i]);
-    } else {  // Even bit.
-      mark(buf[i]);
+  // We always send a message, even for repeat=0, hence '<= repeat'.
+  for (uint16_t r = 0; r <= repeat
+       || (repeat > 0 && _repeatCB && _repeatCB()); r++) {
+    for (uint16_t i = 0; i < len; i++) {
+      if (i & 1) {  // Odd bit.
+        space(buf[i]);
+      } else {  // Even bit.
+        mark(buf[i]);
+      }
     }
   }
   ledOff();  // We potentially have ended with a mark(), so turn of the LED.
