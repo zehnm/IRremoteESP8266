@@ -22,6 +22,10 @@
 std::vector<int> timingList;
 #endif  // SWIGLIB
 
+#if defined(ESP32)
+#include "hal/gpio_ll.h"
+#endif  // ESP32
+
 /// Constructor for an IRsend object.
 /// @param[in] IRsendPin Which GPIO pin to use when sending an IR command.
 /// @param[in] inverted Optional flag to invert the output. (default = false)
