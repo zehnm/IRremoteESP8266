@@ -51,14 +51,24 @@
 #include <iostream>
 #include <string>
 #endif  // UNIT_TEST
+#if __cplusplus >= 202002L
+#include <atomic>
+typedef std::atomic< bool > atomic_bool;
+typedef std::atomic<uint32_t> atomic_uint32_t;
+#else
+typedef volatile bool atomic_bool;
+typedef volatile uint32_t atomic_uint32_t;
+#endif
+typedef volatile uint16_t atomic_uint16_t;
+typedef volatile const uint16_t atomic_const_uint16_t;
 
 // Library Version Information
 // Major version number (X.x.x)
 #define _IRREMOTEESP8266_VERSION_MAJOR 2
 // Minor version number (x.X.x)
-#define _IRREMOTEESP8266_VERSION_MINOR 8
+#define _IRREMOTEESP8266_VERSION_MINOR 9
 // Patch version number (x.x.X)
-#define _IRREMOTEESP8266_VERSION_PATCH 6
+#define _IRREMOTEESP8266_VERSION_PATCH 0
 // Macro to convert version info into an integer
 #define _IRREMOTEESP8266_VERSION_VAL(major, minor, patch) \
                                     (((major) << 16) | ((minor) << 8) | (patch))
@@ -959,6 +969,13 @@
 #define SEND_BLUESTARHEAVY           _IR_ENABLE_DEFAULT_
 #endif  // SEND_BLUESTARHEAVY
 
+#ifndef DECODE_EUROM
+#define DECODE_EUROM         _IR_ENABLE_DEFAULT_
+#endif  // DECODE_EUROM
+#ifndef SEND_EUROM
+#define SEND_EUROM           _IR_ENABLE_DEFAULT_
+#endif  // SEND_EUROM
+
 #if (DECODE_ARGO || DECODE_DAIKIN || DECODE_FUJITSU_AC || DECODE_GREE || \
      DECODE_KELVINATOR || DECODE_MITSUBISHI_AC || DECODE_TOSHIBA_AC || \
      DECODE_TROTEC || DECODE_HAIER_AC || DECODE_HITACHI_AC || \
@@ -978,6 +995,7 @@
      DECODE_DAIKIN200 || DECODE_HAIER_AC160 || DECODE_TCL96AC || \
      DECODE_BOSCH144 || DECODE_SANYO_AC152 || DECODE_DAIKIN312 || \
      DECODE_CARRIER_AC84 || DECODE_YORK || DECODE_BLUESTARHEAVY || \
+     DECODE_EUROM || \
      false)
   // Add any DECODE to the above if it uses result->state (see kStateSizeMax)
   // you might also want to add the protocol to hasACState function
@@ -1145,8 +1163,9 @@ enum decode_type_t {
   CARRIER_AC84,  // 125
   YORK,
   BLUESTARHEAVY,
+  EUROM,
   // Add new entries before this one, and update it to point to the last entry.
-  kLastDecodeType = BLUESTARHEAVY,
+  kLastDecodeType = EUROM,
 };
 
 // Message lengths & required repeat values
@@ -1296,6 +1315,7 @@ const uint16_t kJvcBits = 16;
 const uint16_t kKelonBits = 48;
 const uint16_t kKelon168StateLength = 21;
 const uint16_t kKelon168Bits = kKelon168StateLength * 8;
+const uint16_t kKelon168DefaultRepeat = kNoRepeat;
 const uint16_t kKelvinatorStateLength = 16;
 const uint16_t kKelvinatorBits = kKelvinatorStateLength * 8;
 const uint16_t kKelvinatorDefaultRepeat = kNoRepeat;
@@ -1445,6 +1465,8 @@ const uint16_t kRhossDefaultRepeat = 0;
 const uint16_t kClimaButlerBits = 52;
 const uint16_t kYorkBits = 136;
 const uint16_t kYorkStateLength = 17;
+const uint16_t kEuromStateLength = 12;
+const uint16_t kEuromBits = kEuromStateLength * 8;
 
 // Legacy defines. (Deprecated)
 #define AIWA_RC_T501_BITS             kAiwaRcT501Bits

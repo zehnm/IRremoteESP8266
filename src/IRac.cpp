@@ -19,6 +19,10 @@
 #else
     using ::roundf;
 #endif
+#ifdef SWIGLIB
+#include <vector>
+extern std::vector<int> timingList;
+#endif  // SWIGLIB
 #include "IRsend.h"
 #include "IRremoteESP8266.h"
 #include "IRtext.h"
@@ -34,6 +38,7 @@
 #include "ir_Daikin.h"
 #include "ir_Ecoclim.h"
 #include "ir_Electra.h"
+#include "ir_Eurom.h"
 #include "ir_Fujitsu.h"
 #include "ir_Haier.h"
 #include "ir_Hitachi.h"
@@ -74,6 +79,7 @@
 #ifndef UNIT_TEST
 #define OUTPUT_DECODE_RESULTS_FOR_UT(ac)
 #else
+#ifndef SWIGLIB
 /* NOTE: THIS IS NOT A DOXYGEN COMMENT (would require ENABLE_PREPROCESSING-YES)
 /// If compiling for UT *and* a test receiver @c IRrecv is provided via the
 /// @c _utReceived param, this injects an "output" gadget @c _lastDecodeResults
@@ -99,6 +105,9 @@
       }                                                         \
     }                                                           \
   }
+#else  // SWIGLIB
+#define OUTPUT_DECODE_RESULTS_FOR_UT(ac)
+#endif  // SWIGLIB
 #endif  // UNIT_TEST
 
 /// Class constructor
@@ -182,6 +191,11 @@ stdAc::state_t IRac::getState(void) { return next; }
 /// @return A Ptr to a state containing the previously sent settings.
 stdAc::state_t IRac::getStatePrev(void) { return _prev; }
 
+#ifdef SWIGLIB
+std::vector<int> IRac::getTiming(void) { return timingList; }
+void IRac::resetTiming(void) { timingList.clear(); }
+#endif  // SWIGLIB
+
 /// Is the given protocol supported by the IRac class?
 /// @param[in] protocol The vendor/protocol type.
 /// @return true if the protocol is supported by this class, otherwise false.
@@ -232,6 +246,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_DAIKIN216
     case decode_type_t::DAIKIN216:
 #endif
+#if SEND_DAIKIN312
+    case decode_type_t::DAIKIN312:
+#endif
 #if SEND_DAIKIN64
     case decode_type_t::DAIKIN64:
 #endif
@@ -243,6 +260,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #endif
 #if SEND_ELECTRA_AC
     case decode_type_t::ELECTRA_AC:
+#endif
+#if SEND_EUROM
+    case decode_type_t::EUROM:
 #endif
 #if SEND_FUJITSU_AC
     case decode_type_t::FUJITSU_AC:
@@ -644,13 +664,14 @@ void IRac::argoWrem3_SetTimer(IRArgoAC_WREM3 *ac, bool on,
 /// @param[in] on The power setting.
 /// @param[in] mode The operation mode setting.
 /// @param[in] degrees The temperature setting in degrees.
+/// @param[in] celsius Temperature units. True is Celsius, False is Fahrenheit.
 /// @param[in] fan The speed setting for the fan.
 /// @param[in] quiet Run the device in quiet/silent mode.
 /// @note -1 is Off, >= 0 is on.
 void IRac::bosch144(IRBosch144AC *ac,
                   const bool on, const stdAc::opmode_t mode,
-                  const float degrees, const stdAc::fanspeed_t fan,
-                  const bool quiet) {
+                  const float degrees, const bool celsius,
+                  const stdAc::fanspeed_t fan, const bool quiet) {
   ac->begin();
   ac->setPower(on);
   if (!on) {
@@ -659,7 +680,7 @@ void IRac::bosch144(IRBosch144AC *ac,
       ac->send();
       return;
   }
-  ac->setTemp(degrees);
+  ac->setTemp(degrees, !celsius);
   ac->setFan(ac->convertFan(fan));
   ac->setMode(ac->convertMode(mode));
   ac->setQuiet(quiet);
@@ -1060,6 +1081,54 @@ void IRac::daikin216(IRDaikin216 *ac,
 }
 #endif  // SEND_DAIKIN216
 
+#if SEND_DAIKIN312
+/// Send a Daikin 312-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRDaikin312 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
+/// @param[in] beep Enable/Disable beeps when receiving IR messages.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
+void IRac::daikin312(IRDaikin312 *ac,
+                     const bool on, const stdAc::opmode_t mode,
+                     const float degrees, const stdAc::fanspeed_t fan,
+                     const stdAc::swingv_t swingv,
+                     const stdAc::swingh_t swingh,
+                     const bool quiet, const bool turbo, const bool light,
+                     const bool econo, const bool filter, const bool clean,
+                     const bool beep, const int16_t sleep,
+                     const int16_t clock) {
+  ac->begin();
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingVertical(ac->convertSwingV(swingv));
+  ac->setSwingHorizontal(ac->convertSwingH(swingh));
+  ac->setQuiet(quiet);
+  ac->setLight(light ? 1 : 3);  // On/High is 1, Off is 3.
+  ac->setPowerful(turbo);
+  ac->setEcono(econo);
+  ac->setPurify(filter);
+  ac->setMold(clean);
+  ac->setClean(true);  // Hardwire auto clean to be on per request (@sheppy99)
+  ac->setBeep(beep ? 2 : 3);  // On/Loud is 2, Off is 3.
+  if (sleep > 0) ac->enableSleepTimer(sleep);
+  if (clock >= 0) ac->setCurrentTime(clock);
+  ac->send();
+}
+#endif  // SEND_DAIKIN312
+
 #if SEND_DAIKIN64
 /// Send a Daikin 64-bit A/C message with the supplied settings.
 /// @param[in, out] ac A Ptr to an IRDaikin64 object to use.
@@ -1210,6 +1279,31 @@ void IRac::electra(IRElectraAc *ac,
   ac->send();
 }
 #endif  // SEND_ELECTRA_AC
+
+#if SEND_EUROM
+/// Send an Eurom A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IREuromAc object to use.
+/// @param[in] power The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees, normally Celsius.
+/// @param[in] fahrenheit If the given temperature is in Fahrenheit instead.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The swing setting.
+/// @param[in] sleep The sleep mode setting.
+void IRac::eurom(IREuromAc *ac, const bool power, const stdAc::opmode_t mode,
+                 const float degrees, const bool fahrenheit,
+                 const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
+                 const bool sleep) {
+  ac->begin();
+  ac->setPower(power);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees, fahrenheit);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwing(ac->convertSwing(swingv));
+  ac->setSleep(sleep);
+  ac->send();
+}
+#endif  // SEND_EUROM
 
 #if SEND_FUJITSU_AC
 /// Send a Fujitsu A/C message with the supplied settings.
@@ -3107,7 +3201,8 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
     case BOSCH144:
     {
       IRBosch144AC ac(_pin, _inverted, _modulation);
-      bosch144(&ac, send.power, send.mode, degC, send.fanspeed, send.quiet);
+      bosch144(&ac, send.power, send.mode, send.degrees, send.celsius,
+               send.fanspeed, send.quiet);
       break;
     }
 #endif  // SEND_BOSCH144
@@ -3202,6 +3297,16 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_DAIKIN216
+#if SEND_DAIKIN312
+    case DAIKIN312:
+    {
+      IRDaikin312 ac(_pin, _inverted, _modulation);
+      daikin312(&ac, send.power, send.mode, degC, send.fanspeed, send.swingv,
+                send.swingh, send.quiet, send.turbo, send.light, send.econo,
+                send.filter, send.clean, send.beep, send.sleep, send.clock);
+      break;
+    }
+#endif  // SEND_DAIKIN312
 #if SEND_DAIKIN64
     case DAIKIN64:
     {
@@ -3239,6 +3344,15 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_ELECTRA_AC
+#if SEND_EUROM
+    case EUROM:
+    {
+      IREuromAc ac(_pin, _inverted, _modulation);
+      eurom(&ac, send.power, send.mode, send.degrees, !send.celsius,
+            send.fanspeed, send.swingv, send.sleep);
+      break;
+    }
+#endif  // SEND_EUROM
 #if SEND_FUJITSU_AC
     case FUJITSU_AC:
     {
@@ -4128,6 +4242,15 @@ String resultAcToString(const decode_results * const result) {
       return ac.toString();
     }
 #endif  // DECODE_COOLIX
+#if DECODE_COOLIX48
+    case decode_type_t::COOLIX48: {
+      IRCoolixAC ac(kGpioUnused);
+      ac.on();
+      // Coolix uses value instead of state.
+      ac.setRawFromCoolix48(result->value);
+      return ac.toString();
+    }
+#endif  // DECODE_COOLIX
 #if DECODE_CORONA_AC
     case decode_type_t::CORONA_AC: {
       IRCoronaAc ac(kGpioUnused);
@@ -4184,6 +4307,13 @@ String resultAcToString(const decode_results * const result) {
       return ac.toString();
     }
 #endif  // DECODE_DAIKIN216
+#if DECODE_DAIKIN312
+    case decode_type_t::DAIKIN312: {
+      IRDaikin312 ac(kGpioUnused);
+      ac.setRaw(result->state);
+      return ac.toString();
+    }
+#endif  // DECODE_DAIKIN312
 #if DECODE_DAIKIN64
     case decode_type_t::DAIKIN64: {
       IRDaikin64 ac(kGpioUnused);
@@ -4215,6 +4345,13 @@ String resultAcToString(const decode_results * const result) {
       return ac.toString();
     }
 #endif  // DECODE_ELECTRA_AC
+#if DECODE_EUROM
+    case decode_type_t::EUROM: {
+      IREuromAc ac(kGpioUnused);
+      ac.setRaw(result->state);
+      return ac.toString();
+    }
+#endif  // DECODE_EUROM
 #if DECODE_FUJITSU_AC
     case decode_type_t::FUJITSU_AC: {
       IRFujitsuAC ac(kGpioUnused);
@@ -4679,6 +4816,14 @@ bool decodeToState(const decode_results *decode, stdAc::state_t *result,
       break;
     }
 #endif  // DECODE_DAIKIN216
+#if DECODE_DAIKIN312
+    case decode_type_t::DAIKIN312: {
+      IRDaikin312 ac(kGpioUnused);
+      ac.setRaw(decode->state);
+      *result = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_DAIKIN312
 #if DECODE_DAIKIN64
     case decode_type_t::DAIKIN64: {
       IRDaikin64 ac(kGpioUnused);
@@ -4715,6 +4860,14 @@ bool decodeToState(const decode_results *decode, stdAc::state_t *result,
       break;
     }
 #endif  // DECODE_ELECTRA_AC
+#if DECODE_EUROM
+    case decode_type_t::EUROM: {
+      IREuromAc ac(kGpioUnused);
+      ac.setRaw(decode->state);
+      *result = ac.toCommon();
+      break;
+    }
+#endif  // DECODE_EUROM
 #if DECODE_FUJITSU_AC
     case decode_type_t::FUJITSU_AC: {
       IRFujitsuAC ac(kGpioUnused);

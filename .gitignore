@@ -8,8 +8,10 @@
 # vi/vim
 **/*.swp
 
-# vscode
+# vscode and plugins
 .vscode
+# LLVM clangd support file
+compile_commands.json
 
 ## Build environments
 # Platformio
@@ -23,12 +25,18 @@ examples/**/.travis.yml
 examples/**/.gitignore
 lib/readme.txt
 lib/googletest/
+.platformio/
 
 # GCC pre-compiled headers.
 **/*.gch
 
 # Python compiled files
 **/*.pyc
+
+/python/*.so
+/python/*.o
+/python/*.cxx
+/python/irhvac.py
 
 # Unit Test builds
 test/*.o

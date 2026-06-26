@@ -7,6 +7,9 @@
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
 #include <functional>
+#ifdef SWIGLIB
+#include <vector>
+#endif  // SWIGLIB
 #include "IRremoteESP8266.h"
 
 // Originally from https://github.com/shirriff/Arduino-IRremote/
@@ -15,8 +18,14 @@
 
 #if TEST || UNIT_TEST
 #define VIRTUAL virtual
+#ifdef SWIGLIB
+#define VIRTUALMS
+#else  // SWIGLIB
+#define VIRTUALMS virtual
+#endif  // SWIGLIB
 #else
 #define VIRTUAL
+#define VIRTUALMS
 #endif
 
 // Constants
@@ -46,6 +55,11 @@ const float kNoTempValue = -100.0;
 
 // Callback function for adjusting IR repeats wile sending an IR code
 typedef std::function<bool()> RepeatCallbackFunction;
+
+#ifdef SWIGLIB
+// Global
+extern std::vector<int> timingList;
+#endif  // SWIGLIB
 
 /// Enumerators and Structures for the Common A/C API.
 namespace stdAc {
@@ -217,6 +231,11 @@ enum whirlpool_ac_remote_model_t {
   DG11J191,
 };
 
+// Kelon/Hisense (Kelon168) A/C remote model numbers
+enum kelon168_ac_remote_model_t {
+  DG11R201 = 1,  // RCH-R0Y3 too?
+};
+
 /// LG A/C model numbers
 enum lg_ac_remote_model_t {
   GE6711AR2853M = 1,  // (1) LG 28-bit Protocol (default)
@@ -239,6 +258,7 @@ enum toshiba_ac_remote_model_t {
   // many remote models such as WA-TH03A, WA-TH04A etc.
 };
 
+#ifndef SWIG
 // Classes
 
 /// Class for sending all basic IR protocols.
@@ -256,8 +276,8 @@ class IRsend {
   void begin();
   void enableIROut(uint32_t freq, uint8_t duty = kDutyDefault);
   VIRTUAL void _delayMicroseconds(uint32_t usec);
-  VIRTUAL uint16_t mark(uint16_t usec);
-  VIRTUAL void space(uint32_t usec);
+  VIRTUALMS uint16_t mark(uint16_t usec);
+  VIRTUALMS void space(uint32_t usec);
   int8_t calibrate(uint16_t hz = 38000U);
   void sendRaw(const uint16_t buf[], const uint16_t len, const uint16_t hz);
   void sendData(uint16_t onemark, uint32_t onespace, uint16_t zeromark,
@@ -858,7 +878,7 @@ class IRsend {
 #if SEND_KELON168
   void sendKelon168(const unsigned char data[],
                     const uint16_t nbytes = kKelon168StateLength,
-                    const uint16_t repeat = kNoRepeat);
+                    const uint16_t repeat = kKelon168DefaultRepeat);
 #endif  // SEND_KELON168
 #if SEND_BOSE
   void sendBose(const uint64_t data, const uint16_t nbits = kBoseBits,
@@ -907,6 +927,11 @@ class IRsend {
                        const uint16_t nbytes = kBluestarHeavyStateLength,
                        const uint16_t repeat = kNoRepeat);
 #endif  // SEND_BLUESTARHEAVY
+#if SEND_EUROM
+  void sendEurom(const uint8_t data[],
+                 const uint16_t nbytes = kEuromStateLength,
+                 const uint16_t repeat = kNoRepeat);
+#endif  // SEND_EUROM
 
   /// Set an optional IR repeat callback function to dynamically prolong
   /// the repeat sequence of an actively transmitted IR signal.
@@ -958,5 +983,5 @@ class IRsend {
   bool _irPinIsMask;
 #endif
 };
-
+#endif  // SWIG
 #endif  // IRSEND_H_

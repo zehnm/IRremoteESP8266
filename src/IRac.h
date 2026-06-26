@@ -8,6 +8,9 @@
 #else
 #include <memory>
 #endif
+#ifdef SWIGLIB
+#include <vector>
+#endif  // SWIGLIB
 #include "IRremoteESP8266.h"
 #include "ir_Airton.h"
 #include "ir_Airwell.h"
@@ -22,6 +25,7 @@
 #include "ir_Fujitsu.h"
 #include "ir_Ecoclim.h"
 #include "ir_Electra.h"
+#include "ir_Eurom.h"
 #include "ir_Goodweather.h"
 #include "ir_Gree.h"
 #include "ir_Haier.h"
@@ -107,15 +111,21 @@ class IRac {
   static String swinghToString(const stdAc::swingh_t swingh);
   stdAc::state_t getState(void);
   stdAc::state_t getStatePrev(void);
+#ifdef SWIGLIB
+  std::vector<int> getTiming(void);
+  void resetTiming(void);
+#endif  // SWIGLIB
   bool hasStateChanged(void);
   stdAc::state_t next;  ///< The state we want the device to be in after we send
 #ifdef UNIT_TEST
+#ifndef SWIGLIB
   /// @cond IGNORE
   /// UT-specific
   /// See @c OUTPUT_DECODE_RESULTS_FOR_UT macro description in IRac.cpp
   std::shared_ptr<IRrecv> _utReceiver = nullptr;
   std::unique_ptr<decode_results> _lastDecodeResults = nullptr;
   /// @endcond
+#endif  // SWIGLIB
 #else
 
  private:
@@ -162,7 +172,7 @@ class IRac {
 #if SEND_BOSCH144
   void bosch144(IRBosch144AC *ac,
               const bool on, const stdAc::opmode_t mode, const float degrees,
-              const stdAc::fanspeed_t fan,
+              const bool celsius, const stdAc::fanspeed_t fan,
               const bool quiet);
 #endif  // SEND_BOSCH144
 #if SEND_CARRIER_AC64
@@ -238,6 +248,16 @@ void daikin216(IRDaikin216 *ac,
                const stdAc::swingv_t swingv, const stdAc::swingh_t swingh,
                const bool quiet, const bool turbo);
 #endif  // SEND_DAIKIN216
+#if SEND_DAIKIN312
+  void daikin312(IRDaikin312 *ac,
+                 const bool on, const stdAc::opmode_t mode,
+                 const float degrees, const stdAc::fanspeed_t fan,
+                 const stdAc::swingv_t swingv, const stdAc::swingh_t swingh,
+                 const bool quiet, const bool turbo, const bool light,
+                 const bool econo, const bool filter, const bool clean,
+                 const bool beep, const int16_t sleep = -1,
+                 const int16_t clock = -1);
+#endif  // SEND_DAIKIN312
 #if SEND_DAIKIN64
   void daikin64(IRDaikin64 *ac,
                  const bool on, const stdAc::opmode_t mode,
@@ -267,6 +287,12 @@ void electra(IRElectraAc *ac,
              const stdAc::swingh_t swingh, const bool iFeel, const bool quiet,
              const bool turbo, const bool lighttoggle, const bool clean);
 #endif  // SEND_ELECTRA_AC
+#if SEND_EUROM
+  void eurom(IREuromAc *ac, const bool power, const stdAc::opmode_t mode,
+             const float degrees, const bool fahrenheit,
+             const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
+             const bool sleep);
+#endif  // SEND_EUROM
 #if SEND_FUJITSU_AC
   void fujitsu(IRFujitsuAC *ac, const fujitsu_ac_remote_model_t model,
                const bool on, const stdAc::opmode_t mode,
