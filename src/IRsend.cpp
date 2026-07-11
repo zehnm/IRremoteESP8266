@@ -10,6 +10,7 @@
 #include <stdint.h>
 #endif
 #include <algorithm>
+#include <cassert>
 #ifdef UNIT_TEST
 #include <cmath>
 #endif
@@ -121,9 +122,10 @@ void IRsend::ledOff() {
   } else {
     digitalWrite(static_cast<uint8_t>(IRpin), outputOff);
   }
-#endif
+#else  // !ESP32
   digitalWrite(static_cast<uint8_t>(IRpin), outputOff);
 #endif
+#endif  // UNIT_TEST
 }
 
 /// Turn on the IR LED.
@@ -145,9 +147,10 @@ void IRsend::ledOn() {
   } else {
     digitalWrite(static_cast<uint8_t>(IRpin), outputOn);
   }
-#endif
+#else  // !ESP32
   digitalWrite(static_cast<uint8_t>(IRpin), outputOn);
 #endif
+#endif  // UNIT_TEST
 }
 
 /// Calculate the period for a given frequency.
@@ -181,6 +184,7 @@ void IRsend::enableIROut(uint32_t freq, uint8_t duty) {
   }
   if (freq < 1000)  // Were we given kHz? Supports the old call usage.
     freq *= 1000;
+  assert(freq);
 #ifdef UNIT_TEST
   _freq_unittest = freq;
 #endif  // UNIT_TEST
@@ -195,6 +199,7 @@ void IRsend::enableIROut(uint32_t freq, uint8_t duty) {
   // Decrement the number of fractional bits until the period fits.
   while (maxValue < period) {
     --_fractionalBits;
+    if (_fractionalBits == 0) break;  // Prevent wrap to 255
     maxValue = 0x7FFF >> _fractionalBits;
   }
 
@@ -236,7 +241,7 @@ void IRsend::_delayMicroseconds(uint32_t usec) {
     // Busy wait for the remaining sub-millisecond + leftovers from the timer
     // tick interval in the above delay call.
     if (elapsed < usec) {
-      delayMicroseconds(static_cast<uint16_t>(usec - elapsed));
+      delayMicroseconds(usec - elapsed);  // uint32_t to avoid truncation
     }
 #endif
   }
@@ -373,41 +378,6 @@ void IRsend::space(uint32_t time) {
   ledOff();
   if (time == 0) return;
   _delayMicroseconds(time);
-}
-
-/// Calculate & set any offsets to account for execution times during sending.
-///
-/// @param[in] hz The frequency to calibrate at >= 1000Hz. Default is 38000Hz.
-/// @return The calculated period offset (in uSeconds) which is now in use.
-///  e.g. -5.
-/// @note This will generate an 65535us mark() IR LED signal.
-///  This only needs to be called once, if at all.
-int8_t IRsend::calibrate(uint16_t hz) {
-  if (hz < 1000)  // Were we given kHz? Supports the old call usage.
-    hz *= 1000;
-  int8_t periodOffset = 0;
-  enableIROut(hz);
-  IRtimer usecTimer = IRtimer();  // Start a timer *just* before we do the call.
-  uint16_t pulses = mark(UINT16_MAX);  // Generate a PWM of 65,535 us. (Max.)
-  uint32_t timeTaken = usecTimer.elapsed();  // Record the time it took.
-  // While it shouldn't be necessary, assume at least 1 pulse, to avoid a
-  // divide by 0 situation.
-  pulses = std::max(pulses, static_cast<uint16_t>(1U));
-  uint32_t calcPeriod = calcUSecPeriod(hz);  // e.g. @38kHz it should be 26us.
-  // Assuming 38kHz for the example calculations:
-  // In a 65535us pulse, we should have 2520.5769 pulses @ 26us periods.
-  // e.g. 65535.0us / 26us = 2520.5769
-  // This should have caused approx 2520 loops through the main loop in mark().
-  // The average over that many interations should give us a reasonable
-  // approximation at what offset we need to use to account for instruction
-  // execution times.
-  //
-  // Calculate the actual period from the actual time & the actual pulses
-  // generated.
-  double_t actualPeriod = (double_t)timeTaken / (double_t)pulses;
-  // Store the difference between the actual time per period vs. calculated.
-  periodOffset = (int8_t)((double_t)calcPeriod - actualPeriod);
-  return periodOffset;
 }
 
 /// Generic method for sending data that is common to most protocols.
