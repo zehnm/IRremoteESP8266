@@ -232,6 +232,73 @@ TEST(TestSendRaw, NoTrailingGap) {
   EXPECT_EQ(kNECBits, irsend.capture.bits);
 }
 
+// Test sendRaw with repeat gap for odd-length buffers (ends with mark).
+TEST(TestSendRaw, RepeatGapOddLength) {
+  IRsendTest irsend(4);
+  irsend.begin();
+
+  irsend.reset();
+  // NEC-like pattern: odd length (ends with mark)
+  uint16_t rawData[5] = {9000, 4500, 550, 550, 600};
+  // With repeat=1, should have gap between repetitions
+  irsend.sendRaw(rawData, 5, 38, 1, 50000);  // 50ms repeat gap
+  EXPECT_EQ(
+      "f38000d50"
+      "m9000s4500m550s550m600"
+      "s50000"  // Repeat gap inserted
+      "m9000s4500m550s550m600",
+      irsend.outputStr());
+}
+
+// Test sendRaw without repeat gap for even-length buffers (ends with space).
+TEST(TestSendRaw, NoRepeatGapEvenLength) {
+  IRsendTest irsend(4);
+  irsend.begin();
+
+  irsend.reset();
+  // Even length (ends with space) - already has trailing gap
+  uint16_t rawData[6] = {9000, 4500, 550, 550, 600, 1000};
+  // With repeat=1, should NOT add extra gap (buffer already ends with space)
+  irsend.sendRaw(rawData, 6, 38, 1, 50000);  // 50ms repeat gap (ignored)
+  EXPECT_EQ(
+      "f38000d50"
+      "m9000s4500m550s550m600s1000"
+      // No gap inserted - buffer ends with space
+      "m9000s4500m550s550m600s1000",
+      irsend.outputStr());
+}
+
+// Test sendRaw with repeat=0 (no repeats, no gap needed).
+TEST(TestSendRaw, NoRepeatZero) {
+  IRsendTest irsend(4);
+  irsend.begin();
+
+  irsend.reset();
+  uint16_t rawData[5] = {9000, 4500, 550, 550, 600};
+  irsend.sendRaw(rawData, 5, 38, 0, 50000);  // repeat=0, gap ignored
+  EXPECT_EQ(
+      "f38000d50"
+      "m9000s4500m550s550m600",
+      irsend.outputStr());
+}
+
+// Test sendRaw with default repeat gap (kDefaultMessageGap = 100ms).
+TEST(TestSendRaw, DefaultRepeatGap) {
+  IRsendTest irsend(4);
+  irsend.begin();
+
+  irsend.reset();
+  uint16_t rawData[5] = {9000, 4500, 550, 550, 600};
+  // Use default gap (100ms = 100000us)
+  irsend.sendRaw(rawData, 5, 38, 1);
+  EXPECT_EQ(
+      "f38000d50"
+      "m9000s4500m550s550m600"
+      "s100000"  // Default 100ms gap
+      "m9000s4500m550s550m600",
+      irsend.outputStr());
+}
+
 TEST(TestLowLevelSend, MarkFrequencyModulationAt38kHz) {
   IRsendLowLevelTest irsend(0);
 
