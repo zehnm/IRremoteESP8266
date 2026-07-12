@@ -42,6 +42,7 @@ tools/gc_decode
 tools/mode2_decode
 tools/code_to_raw
 tools/uccode_to_raw
+tools/uccode_to_pronto
 
 .pioenvs
 .piolibdeps
@@ -54,3 +55,7 @@ tools/uccode_to_raw
 # Mac extended attributes
 .DS_Store
 /.vs
+/build
+
+*.bak
+tmp/

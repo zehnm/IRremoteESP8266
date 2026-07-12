@@ -177,6 +177,16 @@ IRac.o : $(USER_DIR)/IRac.cpp $(USER_DIR)/IRac.h $(COMMON_DEPS) $(GMOCK_HEADERS)
 IRac_test.o : IRac_test.cpp $(USER_DIR)/IRac.h $(COMMON_DEPS) $(GMOCK_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c IRac_test.cpp
 
+UCCODE_TOOL_DEPS = ../tools/uccode_common.h $(COMMON_TEST_DEPS) $(GMOCK_HEADERS)
+
+uccode_to_raw_test.o : uccode_to_raw_test.cpp ../tools/uccode_to_raw.h \
+                       $(UCCODE_TOOL_DEPS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c uccode_to_raw_test.cpp
+
+uccode_to_pronto_test.o : uccode_to_pronto_test.cpp ../tools/uccode_to_pronto.h \
+                          $(UCCODE_TOOL_DEPS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c uccode_to_pronto_test.cpp
+
 # new specific targets goes above this line
 
 ir_%.o : $(USER_DIR)/ir_%.h $(USER_DIR)/ir_%.cpp $(COMMON_DEPS)
