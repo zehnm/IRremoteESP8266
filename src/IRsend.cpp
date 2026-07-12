@@ -684,22 +684,50 @@ void IRsend::sendManchester(const uint16_t headermark,
 /// @param[in] len Nr. of elements in the buf[] array.
 /// @param[in] hz Frequency to send the message at. (kHz < 1000; Hz >= 1000)
 /// @param[in] repeat The number of times the full command is to be repeated.
+/// @param[in] repeat_gap Gap between repetitions in microseconds.
+///   Only applied if the buffer ends with a mark (odd length), which is the
+///   typical case for raw captures. Default is 100 ms (kDefaultMessageGap).
 /// @note Even elements are Mark times (On), Odd elements are Space times (Off).
+/// @note Raw captures typically have odd length (end with mark).
+///   When repeating, the last mark of repetition N would fuse with the header
+///   mark of repetition N+1 without an inter-repeat gap, making the repeated
+///   frames undecodable.
 /// Ref:
 ///   examples/IRrecvDumpV2/IRrecvDumpV2.ino (or later)
 void IRsend::sendRaw(const uint16_t buf[], const uint16_t len,
-                     const uint16_t hz, uint16_t repeat) {
+                     const uint16_t hz, uint16_t repeat,
+                     uint32_t repeat_gap) {
   // Set IR carrier frequency
   enableIROut(hz);
+  // Determine if we need to add a gap between repeats.
+  // Odd length = ends with mark (needs gap), even length = ends with space.
+  const bool needs_repeat_gap = (len & 1);
   // We always send a message, even for repeat=0, hence '<= repeat'.
-  for (uint16_t r = 0; r <= repeat
-       || (repeat > 0 && _repeatCB && _repeatCB()); r++) {
+  for (uint16_t r = 0; r <= repeat; r++) {
     for (uint16_t i = 0; i < len; i++) {
       if (i & 1) {  // Odd bit.
         space(buf[i]);
       } else {  // Even bit.
         mark(buf[i]);
       }
+    }
+    // Add gap between repetitions if buffer ends with a mark.
+    if (needs_repeat_gap && r < repeat) {
+      space(repeat_gap);
+    }
+  }
+  // Handle callback-extended repeats.
+  while (repeat > 0 && _repeatCB && _repeatCB()) {
+    for (uint16_t i = 0; i < len; i++) {
+      if (i & 1) {  // Odd bit.
+        space(buf[i]);
+      } else {  // Even bit.
+        mark(buf[i]);
+      }
+    }
+    // Add gap after callback-extended repeat (another may follow).
+    if (needs_repeat_gap) {
+      space(repeat_gap);
     }
   }
   ledOff();  // We potentially have ended with a mark(), so turn of the LED.

@@ -252,7 +252,8 @@ class IRsend {
     return 0;
   }
   void sendRaw(const uint16_t buf[], const uint16_t len, const uint16_t hz,
-               uint16_t repeat = kNoRepeat);
+               uint16_t repeat = kNoRepeat,
+               uint32_t repeat_gap = kDefaultMessageGap);
   void sendData(uint16_t onemark, uint32_t onespace, uint16_t zeromark,
                 uint32_t zerospace, uint64_t data, uint16_t nbits,
                 bool MSBfirst = true);
