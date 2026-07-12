@@ -247,7 +247,10 @@ class IRsend {
   VIRTUAL void _delayMicroseconds(uint32_t usec);
   VIRTUAL uint16_t mark(uint16_t usec);
   VIRTUAL void space(uint32_t usec);
-  int8_t calibrate(uint16_t hz = 38000U);
+  /// @deprecated No longer used, NOP.
+  int8_t calibrate(uint16_t = 38000U) {
+    return 0;
+  }
   void sendRaw(const uint16_t buf[], const uint16_t len, const uint16_t hz,
                uint16_t repeat = kNoRepeat);
   void sendData(uint16_t onemark, uint32_t onespace, uint16_t zeromark,
@@ -930,9 +933,10 @@ class IRsend {
 #else
   uint32_t _freq_unittest;
 #endif  // UNIT_TEST
-  uint16_t onTimePeriod;  // Fixed point.
-  uint16_t offTimePeriod;  // Fixed point.
-  uint8_t _fractionalBits;  // Number of fractional bits in on/offTimePeriod.
+  uint16_t onTimePeriod = 0;  // Fixed point.
+  uint16_t offTimePeriod = 0;  // Fixed point.
+  // Number of fractional bits in on/offTimePeriod.
+  uint8_t _fractionalBits = 14;
   uint32_t IRpin;
   uint8_t _dutycycle;
   bool modulation;
@@ -947,15 +951,15 @@ class IRsend {
 #if defined(ESP32)
   // Use a pinmask for IR output instead a single pin.
   // IRpin holds the lower 32 bit GPIO pinmask, instead of a single GPIO number
-  bool _irPinMaskEnabled;
+  bool _irPinMaskEnabled = false;
   // Upper 32 bit GPIO pinmask for setting outputs.
-  uint32_t _w1ts_mask_upper;
+  uint32_t _w1ts_mask_upper = 0;
   // // GPIO pin mask for setting outputs
   // uint64_t _w1ts_mask;
   // Lower GPIO pin mask for clearing outputs (inverted outputs)
-  uint32_t _w1tc_mask_lower;
+  uint32_t _w1tc_mask_lower = 0;
   // Upper GPIO pin mask for clearing outputs (inverted outputs)
-  uint32_t _w1tc_mask_upper;
+  uint32_t _w1tc_mask_upper = 0;
 #endif
 };
 
