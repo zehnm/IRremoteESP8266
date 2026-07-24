@@ -15,8 +15,10 @@ jobs:
   arduino-library-manager-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: arduino/arduino-lint-action@v1
+      - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
+        with:
+          persist-credentials: false
+      - uses: arduino/arduino-lint-action@e9a30879471dcbf7d9fe3481b26e60b652cca297 # v1.0.2
         with:
           library-manager: update
           compliance: strict
@@ -28,13 +30,17 @@ jobs:
   detect-duplicate-files:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
+      with:
+        persist-credentials: false
     - name: Look for case-insensitive filename collisions.
       run: DUPS=$(find . -path '*/.pio' -prune -o -print | sort | uniq -D -i); if [[ -n "${DUPS}" ]]; then echo -e "Duplicates found:\n${DUPS}"; false; fi
   version-number-consitent:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
+      with:
+        persist-credentials: false
     - name: Check all the version numbers match.
       run: |
         LIB_VERSION=$(tools/extract_lib_version.sh)
@@ -43,12 +49,16 @@ jobs:
   examples-have-platformio_ini:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
+      with:
+        persist-credentials: false
     - name: Check that every example directory has a platformio.ini file.
       run: (status=0; for dir in examples/*; do if [[ ! -f "${dir}/platformio.ini" ]]; then echo "${dir} has no 'platform.ini' file!"; status=1; fi; done; exit ${status})
   supported-devices-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
+      with:
+        persist-credentials: false
     - name: Check that all files have supported sections.
       run: (SUPPORTED_OUTPUT=$(python3 tools/scrape_supported_devices.py --noout --alert 2>&1); if [[ $? -ne 0 || -n "${SUPPORTED_OUTPUT}" ]]; then echo "${SUPPORTED_OUTPUT}"; exit 1; fi)
