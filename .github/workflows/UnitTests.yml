@@ -8,7 +8,9 @@ jobs:
     env:
       MAKEFLAGS: "-j 2"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
+      with:
+        persist-credentials: false
     - name: Build tools unit tests
       run: (cd tools; make all)
     - name: Run tools unit tests
@@ -19,7 +21,9 @@ jobs:
     env:
       MAKEFLAGS: "-j 2"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
+      with:
+        persist-credentials: false
     - name: Install the Google test suite
       run: (cd test; make install-googletest)
     - name: Build base unit test
